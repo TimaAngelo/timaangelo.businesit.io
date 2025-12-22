@@ -1,4 +1,4 @@
-// Простая структура вопросов — редактируйте здесь
+// Базовый список на случай недоступности файла с вопросами
 const QUESTIONS = [
   {q: 'Какое число является четным?', opts:['3','7','8','11'], a:2, explain:'8 — единственное четное число в списке.'},
   {q: 'Столица Франции?', opts:['Берлин','Париж','Мадрид','Рим'], a:1, explain:'Париж — столица Франции.'},
@@ -6,6 +6,7 @@ const QUESTIONS = [
   {q: 'Что из перечисленного — программный язык?', opts:['HTML','CSS','Python','JPEG'], a:2, explain:'Python — полноценный язык программирования.'},
   {q: '2 + 2 = ?', opts:['3','4','5','22'], a:1, explain:'2 + 2 = 4.'}
 ];
+const SOURCE_HTML = 'Тесты для подговки к экзамену-1.htm';
 let idx = 0;
 const container = document.getElementById('q-container');
 const progressBar = document.getElementById('q-progress');
@@ -19,14 +20,22 @@ let autoTimer = null;
 function updateProgress(){
   const el = progressBar.querySelector('i') || document.createElement('i');
   if(!progressBar.contains(el)) progressBar.appendChild(el);
-  const pct = Math.round(((idx)/QUIZ.length)*100);
+  const pct = QUIZ.length ? Math.round(((idx)/QUIZ.length)*100) : 0;
   el.style.width = pct + '%';
-  progressBar.setAttribute('data-label', `${idx+1}/${QUIZ.length}`);
+  progressBar.setAttribute('data-label', QUIZ.length ? `${idx+1}/${QUIZ.length}` : '0/0');
 }
 function renderQuestion(){
   if(autoTimer){ clearTimeout(autoTimer); autoTimer = null; }
-  const data = QUIZ[idx];
   container.innerHTML = '';
+  if(!QUIZ.length){
+    const empty = document.createElement('div');
+    empty.className = 'question';
+    empty.textContent = 'Вопросы не найдены';
+    container.appendChild(empty);
+    updateProgress();
+    return;
+  }
+  const data = QUIZ[idx];
   const q = document.createElement('div'); q.className = 'question'; q.textContent = (idx+1)+'. '+data.q; container.appendChild(q);
   const opts = document.createElement('div'); opts.className = 'options';
   data.opts.forEach((text,i)=>{
@@ -81,14 +90,30 @@ importFile.addEventListener('change', async (e)=>{
 function parseWordHtmlToQuestions(html){
   const dom = new DOMParser().parseFromString(html,'text/html');
   const out = [];
+  const text = (el)=> (el?.textContent || '').replace(/\s+/g,' ').trim();
+
   const tables = dom.querySelectorAll('table');
   tables.forEach(tbl=>{
     const rows = tbl.querySelectorAll('tr');
     rows.forEach(row=>{
       const cells = Array.from(row.querySelectorAll('td,th'));
-      if(cells.length>=5){
-        const q = cells[0].textContent.trim();
-        const opts = cells.slice(1,5).map(c=> c.textContent.trim()).filter(Boolean);
+      // Основная структура из экспортированного Word: вопрос в 3-й ячейке, правильный ответ в 4-й
+      if(cells.length >= 7){
+        const q = text(cells[2]);
+        const answers = [cells[3], cells[4], cells[5], cells[6]].map(text).filter(Boolean);
+        if(q && answers.length === 4){
+          const correct = answers[0];
+          const shuffled = [...answers];
+          shuffle(shuffled);
+          const a = Math.max(0, shuffled.indexOf(correct));
+          out.push({q, opts: shuffled, a, explain: `Правильный ответ: ${correct}`});
+          return;
+        }
+      }
+      // Базовая структура (вопрос в первой колонке, варианты в следующих четырех)
+      if(cells.length >= 5){
+        const q = text(cells[0]);
+        const opts = cells.slice(1,5).map(c=> text(c)).filter(Boolean);
         let a = 0;
         for(let k=1;k<=4;k++){
           const cell = cells[k];
@@ -111,7 +136,30 @@ function parseWordHtmlToQuestions(html){
   }
   return out;
 }
-updateProgress(); renderQuestion(); updateCount();
+
+async function loadDefaultHtml(){
+  try{
+    const res = await fetch(encodeURI(SOURCE_HTML));
+    if(!res.ok) throw new Error('source not found');
+    const html = await res.text();
+    const parsed = parseWordHtmlToQuestions(html);
+    if(parsed.length){
+      QUIZ = parsed;
+      idx = 0;
+      shuffle(QUIZ);
+      renderQuestion();
+      updateCount();
+      return;
+    }
+  } catch(err){
+    console.warn('Не удалось загрузить вопросы из HTML:', err);
+  }
+  renderQuestion();
+  updateCount();
+}
+
+updateProgress();
+loadDefaultHtml();
 window.QUIZ = {QUESTIONS, QUIZ};
 
 function escapeHtml(str){
