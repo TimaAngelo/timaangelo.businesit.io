@@ -1,66 +1,94 @@
-# Решение проблемы с доменом timaangelo.businesit.io
+# Решение проблемы с доступом к сайту
 
-## Ошибка: DNS_PROBE_FINISHED_NXDOMAIN
+## ✅ Сайт теперь доступен!
 
-Эта ошибка означает, что DNS не может найти ваш домен. Нужно настроить DNS записи.
+Сайт опубликован на GitHub Pages и доступен по адресу:
 
-## Что сделано:
-✅ CNAME файл добавлен в репозиторий
-✅ GitHub Pages файлы готовы
+**https://timaangelo.github.io/timaangelo.businesit.io/**
 
-## Что нужно сделать:
+---
 
-### Шаг 1: Активировать GitHub Pages
+## Настройка пользовательского домена (опционально)
 
-1. Откройте: https://github.com/TimaAngelo/timaangelo.businesit.io/settings/pages
-2. Нажмите на секцию **Pages** в левом меню
-3. В разделе "Build and deployment":
-   - **Source**: Выберите "Deploy from a branch"
-   - **Branch**: `main`, папка `/ (root)`
-4. В разделе "Custom domain" должна появиться ошибка (это нормально)
-5. Нажмите **Save**
+Если вы хотите использовать пользовательский домен `timaangelo.businesit.io` вместо стандартного GitHub Pages адреса, выполните следующие шаги.
 
-### Шаг 2: Настроить DNS записи
+### Ошибка: DNS_PROBE_FINISHED_NXDOMAIN
 
-У вас есть домен **timaangelo.businesit.io**. Нужно добавить DNS записи у регистратора домена.
+Эта ошибка возникает, когда пользовательский домен указан в настройках GitHub Pages, но DNS записи не настроены. DNS не может найти ваш домен.
 
-Вы должны добавить **A records** (или ALIAS):
+## Что уже сделано:
+✅ GitHub Pages активирован и работает
+✅ Сайт доступен по стандартному адресу GitHub Pages
+
+## Что нужно сделать для пользовательского домена:
+
+### Шаг 1: Настроить DNS записи у регистратора домена
+
+У вас есть домен **timaangelo.businesit.io**. Чтобы он работал, добавьте DNS записи у вашего регистратора домена (например, Cloudflare, Namecheap, GoDaddy и т.д.).
+
+#### Вариант A: A Records (рекомендуется)
+
+Добавьте следующие **A records**:
 
 ```
-Хост:  @
+Хост:  timaangelo (или @, в зависимости от регистратора)
 Тип:   A
 Значение: 185.199.108.153
          185.199.109.153
          185.199.110.153
          185.199.111.153
+TTL: Auto или 3600
 ```
 
-ИЛИ (если поддерживается):
+#### Вариант B: CNAME Record (если поддерживается)
+
 ```
-Хост:  @
-Тип:   ALIAS/ANAME
+Хост:  timaangelo
+Тип:   CNAME
 Значение: timaangelo.github.io
+TTL: Auto или 3600
 ```
 
-### Шаг 3: Проверить STATUS
+### Шаг 2: Добавить CNAME файл в репозиторий
 
-После добавления DNS записей:
+После настройки DNS создайте файл `CNAME` в корне репозитория со следующим содержимым:
+
+```
+timaangelo.businesit.io
+```
+
+Затем выполните:
+```bash
+git add CNAME
+git commit -m "Add custom domain CNAME"
+git push
+```
+
+### Шаг 3: Активировать пользовательский домен в GitHub Pages
+
+1. Откройте: https://github.com/TimaAngelo/timaangelo.businesit.io/settings/pages
+2. В разделе "Custom domain" введите: `timaangelo.businesit.io`
+3. Нажмите **Save**
+4. Подождите несколько минут для проверки DNS
+
+### Шаг 4: Проверить статус
+
+После настройки DNS (обычно занимает 5-30 минут):
 1. Откройте https://github.com/TimaAngelo/timaangelo.businesit.io/settings/pages
-2. Подождите 5-10 минут
-3. Вы увидите: "Your site is live at https://timaangelo.businesit.io" (зеленая галочка)
+2. Вы должны увидеть: "Your site is live at https://timaangelo.businesit.io" (зеленая галочка)
 
-## Альтернатива (быстрый тест):
+---
 
-Пока DNS не настроен, сайт доступен по стандартному GitHub Pages адресу:
-```
-https://timaangelo.github.io/timaangelo.businesit.io/
-```
+## Текущее решение (без пользовательского домена)
 
-Проверьте, работает ли он там!
+Сайт уже доступен по стандартному адресу GitHub Pages. Это работает прямо сейчас и не требует настройки DNS:
 
-## Если у вас нет доступа к DNS:
+**https://timaangelo.github.io/timaangelo.businesit.io/**
 
-Используйте сервис для перенаправления:
-- https://pages.cloudflare.com/ (бесплатно)
-- https://www.namecheap.com/ (если домен там)
-- https://www.godaddy.com/ (если домен там)
+Вы можете использовать этот адрес постоянно, или настроить пользовательский домен позже, следуя инструкциям выше.
+
+---
+
+## Если у вас нет доступа к настройкам DNS
+
+Если у вас нет доступа к настройкам DNS домена `businesit.io`, обратитесь к администратору домена или используйте стандартный адрес GitHub Pages.
